@@ -198,7 +198,9 @@ const totalCommitsFetcher = async (username) => {
   try {
     res = await retryer(fetchTotalCommits, { login: username });
   } catch (err) {
-    logger.log(err);
+    // Log the message only: an axios error carries the request headers,
+    // including the Authorization header with the personal access token.
+    logger.log(err instanceof Error ? err.message : err);
     throw new Error(err);
   }
 

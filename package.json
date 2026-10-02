@@ -34,7 +34,7 @@
     "bench": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.bench.config.js",
     "cf:dev": "wrangler dev",
     "cf:dry-run": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
-    "cf:deploy": "wrangler deploy"
+    "cf:deploy": "node cloudflare/assert-no-dotenv.mjs && wrangler deploy"
   },
   "author": "Anurag Hazra",
   "license": "MIT",

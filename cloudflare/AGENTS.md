@@ -6,14 +6,15 @@ Production URL: `https://github-readme-stats.victor-long-cheng.workers.dev` (Clo
 
 ## Files
 
-- `worker.js`: Worker entry (`wrangler.jsonc` `main`). Routes `/api`, `/api/pin`, `/api/top-langs`, `/api/wakatime`, `/api/gist`, `/api/status/up` and `/api/status/pat-info` (trailing slash and `.js` suffix allowed, as on Vercel) to the handlers, redirects `/` with 308 to the upstream repository (the `vercel.json` redirect), and answers every other path with 404. It sets axios to its `fetch` adapter and sends `User-Agent: github-readme-stats` (the GitHub API answers 403 without one). Successful responses with an `s-maxage` go into `caches.default` for that many seconds, standing in for the Vercel CDN; the handler's own Cache-Control is restored on a hit, and `x-worker-cache: HIT|MISS` tells which path answered. GitHub's image proxy (Camo) times out after a few seconds, and a cold `top-langs` render takes about 4 s, so the cache matters.
+- `worker.js`: Worker entry (`wrangler.jsonc` `main`). Redirects plain HTTP to HTTPS with 308 (as Vercel did; workers.dev has no zone setting for it). Routes `/api`, `/api/pin`, `/api/top-langs`, `/api/wakatime`, `/api/gist`, `/api/status/up` and `/api/status/pat-info` (trailing slash and `.js` suffix allowed, as on Vercel) to the handlers, redirects `/` with 308 to the upstream repository (the `vercel.json` redirect), and answers every other path with 404. Every HTTP method renders the card, as the Vercel handlers ignore the method; only GET and HEAD use the edge cache. It sets axios to its `fetch` adapter and sends `User-Agent: github-readme-stats` (the GitHub API answers 403 without one).
+  - Edge cache (stands in for the Vercel content delivery network): a successful response with an `s-maxage` goes into `caches.default` for `s-maxage` plus `stale-while-revalidate` seconds. Inside `s-maxage` a request gets `x-worker-cache: HIT`. After it, the request gets the stale copy at once (`x-worker-cache: STALE`) and the Worker renders a fresh copy in `waitUntil`. Concurrent misses for one URL in one isolate share one render. A cold render takes 3 to 5 s, and GitHub's image proxy (Camo) times out after a few seconds, so the cache matters. The handler's own Cache-Control is restored on every cached answer.
 - `worker-core.js`: input/output-free part of the entry (route table, Vercel-style `req.query`, the `res.setHeader`/`res.send` shim, the edge time-to-live parser). Tested by `tests/cloudflare-worker-core.test.js`.
 - `module-shim.js`: replaces Node's `module` built-in (`wrangler.jsonc` `alias`). `src/cards/gist.js` and `src/cards/wakatime.js` read `src/common/languageColors.json` with `createRequire(import.meta.url)`, which cannot work on Workers; the shim serves the bundled JSON.
 
 ## Build and deploy
 
 - `npm run cf:dry-run` bundles to `.wrangler/dry-run` (about 245 KiB, ASCII only, far below the 128 MB isolate). `npm run cf:dev` runs the Worker locally and reads variables from `.dev.vars` (ignored by git).
-- Deploy with `npm run cf:deploy` from a copy of the repository without `.env*` or `.dev.vars` files, with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exported. Wrangler does not bake `.env` values into a deploy, but a clean copy keeps local secrets out of the upload by construction.
+- Deploy with `npm run cf:deploy` from a copy of the repository without `.env*` or `.dev.vars` files (`cloudflare/assert-no-dotenv.mjs` refuses the deploy when the root holds one), with `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` exported. Wrangler does not bake `.env` values into a deploy, but a clean copy keeps local secrets out of the upload by construction.
 - A push to git deploys nothing: no Workers Builds and no Vercel deployment are connected.
 
 ## Outside git
@@ -27,6 +28,8 @@ Vercel restores nothing while its account is disabled, so fix forward. To take t
 
 ## Known differences from Vercel
 
-- Vercel served the repository's root files (for example `/powered-by-vercel.svg`) as static files; the Worker answers 404 for them. No README uses them.
-- Edge cache entries live per Cloudflare data center, and there is no stale-while-revalidate at the edge: the first request after expiry renders again.
+- Vercel served the root files that `.vercelignore` did not exclude (for example `LICENSE`, `package.json`, `themes/`, `src/`) as static files; the Worker answers 404 for them. No README uses them.
+- `/robots.txt` answers with the Cloudflare-managed robots.txt (content signals). Cloudflare serves it in front of the Worker on workers.dev; Vercel answered 404.
+- Edge cache entries live per Cloudflare data center: the first request for a card in a data center still renders cold (3 to 5 s). There is no shared store (the API token cannot create KV namespaces).
+- `src/fetchers/stats.js` logs only the message of a failed GitHub request, because the axios error object holds the Authorization header and Workers Logs persist.
 - `/api/status/*` uses the same Cache API path, so `/api/status/up` is kept for 300 s, as its `s-maxage` asks.

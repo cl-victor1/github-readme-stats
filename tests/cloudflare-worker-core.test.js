@@ -6,6 +6,7 @@ import {
   createResponseShim,
   edgeTtl,
   resolveRoute,
+  staleTtl,
   toQuery,
 } from "../cloudflare/worker-core.js";
 
@@ -54,5 +55,13 @@ describe("cloudflare worker core", () => {
     expect(edgeTtl("max-age=0, s-maxage=300")).toBe(300);
     expect(edgeTtl("no-cache, no-store, must-revalidate, max-age=0")).toBe(0);
     expect(edgeTtl(null)).toBe(0);
+  });
+
+  it("reads the stale-while-revalidate window", () => {
+    expect(
+      staleTtl("max-age=86400, s-maxage=86400, stale-while-revalidate=86400"),
+    ).toBe(86400);
+    expect(staleTtl("max-age=0, s-maxage=300")).toBe(0);
+    expect(staleTtl(null)).toBe(0);
   });
 });

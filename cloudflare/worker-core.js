@@ -130,3 +130,19 @@ export const edgeTtl = (cacheControl) => {
   const match = /s-maxage=(\d+)/i.exec(cacheControl);
   return match ? parseInt(match[1], 10) : 0;
 };
+
+/**
+ * Returns how long the edge may keep serving a stale copy while it renders
+ * a fresh one, from the `stale-while-revalidate` directive the handlers send
+ * (Vercel's CDN honored the same directive).
+ *
+ * @param {string | null} cacheControl Cache-Control header value.
+ * @returns {number} Seconds; 0 means no stale window.
+ */
+export const staleTtl = (cacheControl) => {
+  if (!cacheControl) {
+    return 0;
+  }
+  const match = /stale-while-revalidate=(\d+)/i.exec(cacheControl);
+  return match ? parseInt(match[1], 10) : 0;
+};
