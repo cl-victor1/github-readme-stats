@@ -1,0 +1,23 @@
+// Cloudflare Workers deployment of the api/ handlers. See cloudflare/AGENTS.md.
+// Vercel ignores this file (vercel.json and api/ still drive the Vercel build).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "github-readme-stats",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2026-09-01",
+  // nodejs_compat populates process.env from the Worker variables before the
+  // handler modules evaluate (src/common/retryer.js counts PAT_* at load time).
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // src/cards/{gist,wakatime}.js read a JSON file through createRequire.
+  "alias": { "module": "./cloudflare/module-shim.js" },
+  "minify": true,
+  "keep_names": false,
+  // Runtime variables (PAT_1, ...) are plain-text variables set through the
+  // Cloudflare API, never in this file; keep_vars keeps them across deploys.
+  "keep_vars": true,
+  // No custom domain: the public URL is
+  // https://github-readme-stats.victor-long-cheng.workers.dev (README image links).
+  "workers_dev": true,
+  "preview_urls": false,
+  "observability": { "enabled": true },
+}

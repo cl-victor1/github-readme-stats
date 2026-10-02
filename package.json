@@ -30,8 +30,11 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "lint": "npx eslint --max-warnings 0 \"./src/**/*.js\" \"./scripts/**/*.js\" \"./tests/**/*.js\" \"./api/**/*.js\" \"./themes/**/*.js\"",
-    "bench": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.bench.config.js"
+    "lint": "npx eslint --max-warnings 0 \"./src/**/*.js\" \"./scripts/**/*.js\" \"./tests/**/*.js\" \"./api/**/*.js\" \"./themes/**/*.js\" \"./cloudflare/**/*.js\"",
+    "bench": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.bench.config.js",
+    "cf:dev": "wrangler dev",
+    "cf:dry-run": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "cf:deploy": "wrangler deploy"
   },
   "author": "Anurag Hazra",
   "license": "MIT",
@@ -58,7 +61,8 @@
     "lint-staged": "^16.2.7",
     "lodash.snakecase": "^4.1.1",
     "parse-diff": "^0.11.1",
-    "prettier": "^3.7.3"
+    "prettier": "^3.7.3",
+    "wrangler": "^4.147.0"
   },
   "dependencies": {
     "axios": "^1.13.1",

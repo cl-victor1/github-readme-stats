@@ -13,3 +13,8 @@ tests
 .prettierignore
 .pretterrc.json
 codecov.yml
+
+# Cloudflare Workers (not used by Vercel)
+cloudflare
+wrangler.jsonc
+.wrangler

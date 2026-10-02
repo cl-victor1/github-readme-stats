@@ -14,3 +14,7 @@ vercel_token
 *.code-workspace
 
 .vercel
+
+# Cloudflare Workers
+.wrangler
+.dev.vars*
