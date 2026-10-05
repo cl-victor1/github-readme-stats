@@ -3,6 +3,7 @@
  */
 import { describe, expect, it } from "@jest/globals";
 import {
+  ROBOTS_TXT,
   createResponseShim,
   edgeTtl,
   resolveRoute,
@@ -63,5 +64,10 @@ describe("cloudflare worker core", () => {
     ).toBe(86400);
     expect(staleTtl("max-age=0, s-maxage=300")).toBe(0);
     expect(staleTtl(null)).toBe(0);
+  });
+
+  it("asks every crawler to stay out in robots.txt", () => {
+    expect(ROBOTS_TXT).toBe("User-agent: *\nDisallow: /\n");
+    expect(resolveRoute("/robots.txt")).toBeUndefined();
   });
 });

@@ -20,6 +20,7 @@ import statusUp from "../api/status/up.js";
 import patInfo from "../api/status/pat-info.js";
 import {
   ORIGIN_CACHE_CONTROL,
+  ROBOTS_TXT,
   ROOT_REDIRECT,
   createResponseShim,
   edgeTtl,
@@ -177,6 +178,15 @@ export default {
 
     if (url.pathname === "/") {
       return Response.redirect(ROOT_REDIRECT, 308);
+    }
+
+    if (url.pathname === "/robots.txt") {
+      return new Response(request.method === "HEAD" ? null : ROBOTS_TXT, {
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "public, max-age=86400",
+        },
+      });
     }
 
     const route = resolveRoute(url.pathname);

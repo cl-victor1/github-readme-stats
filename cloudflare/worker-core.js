@@ -15,6 +15,12 @@ export const ROOT_REDIRECT =
   "https://github.com/anuraghazra/github-readme-stats";
 
 /**
+ * robots.txt body. The Worker serves only SVG cards and JSON status, with no
+ * human-facing pages, so every crawler is asked to stay out.
+ */
+export const ROBOTS_TXT = "User-agent: *\nDisallow: /\n";
+
+/**
  * Route table mirroring Vercel's file-system routing of `api/`.
  * Keys are paths without a trailing slash; values name the handler module.
  */
